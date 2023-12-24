@@ -116,7 +116,7 @@ def remove_all(
         if error:
             typer.secho(
                 f'Removing grocery items failed with "{ERRORS[error]}"',
-                fg.typer.colors.RED,
+                fg=typer.colors.RED,
             )
             raise typer.Exit(1)
         else:
@@ -154,7 +154,7 @@ def list_all() -> None:
     if len(grocery_bank) == 0:
         typer.secho(
             "There are no groceries in the bank yet",
-            fg.typer.colors.RED
+            fg=typer.colors.RED
         )
         raise typer.Exit()
     typer.secho("\ngrocery bank:\n", fg=typer.colors.BLUE, bold=True)
