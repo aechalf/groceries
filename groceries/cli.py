@@ -9,36 +9,7 @@ from groceries import (
 )
 
 app = typer.Typer()
-
-@app.command()
-def init(
-    db_path: str = typer.Option(
-        str(database.DEFAULT_DB_FILE_PATH),
-        "--db-path",
-        "-db",
-        prompt="groceries database location?",
-    ),
-) -> None:
-    """Initialize the groceries database."""
-    app_init_error = config.init_app(db_path)
-    if app_init_error:
-        typer.secho(
-            f'Creating config file failed with "{ERRORS[app_init_error]}"',
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
-    db_init_error = database.init_database(Path(db_path))
-    if db_init_error:
-        typer.secho(
-            f'Creating database failed with "{ERRORS[db_init_error]}"',
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
-    else:
-        typer.secho(f"The groceries database is {db_path}", 
-                    fg=typer.colors.GREEN)
         
-
 def get_grocery_controller() -> grocery.GroceryController:
     if config.CONFIG_FILE_PATH.exists():
         db_path = database.get_database_path(config.CONFIG_FILE_PATH)
@@ -128,7 +99,7 @@ def remove_all(
 @app.command()
 def add(
     name: List[str] = typer.Argument(...),
-    category: grocery.GroceryType = typer.Option(...,"--category", "-c", case_sensitive=False),
+    category: grocery.GroceryType = typer.Argument(...),
 ) -> None:
     """Add a new grocery with a CATEGORY."""
     gc = get_grocery_controller()
@@ -175,6 +146,39 @@ def list_all() -> None:
             fg=typer.colors.BLUE,
         )
     typer.secho("-" * len(headers) + "\n", fg=typer.colors.BLUE)
+
+
+#
+# Global commands such as version and init
+# 
+@app.command()
+def init(
+    db_path: str = typer.Option(
+        str(database.DEFAULT_DB_FILE_PATH),
+        "--db-path",
+        "-db",
+        prompt="groceries database location?",
+    ),
+) -> None:
+    """Initialize the groceries database."""
+    app_init_error = config.init_app(db_path)
+    if app_init_error:
+        typer.secho(
+            f'Creating config file failed with "{ERRORS[app_init_error]}"',
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+    db_init_error = database.init_database(Path(db_path))
+    if db_init_error:
+        typer.secho(
+            f'Creating database failed with "{ERRORS[db_init_error]}"',
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+    else:
+        typer.secho(f"The groceries database is {db_path}", 
+                    fg=typer.colors.GREEN)
+        
 
 def _version_callback(value: bool) -> None:
     if value:
