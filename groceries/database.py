@@ -18,9 +18,9 @@ def get_database_path(config_file: Path) -> Path:
     return Path(config_parser["General"]["database"])
 
 def init_database(db_path: Path) -> int:
-    """Create the to-do database."""
+    """Create the application's database."""
     try:
-        db_path.write_text("[]") # Empty to-do list
+        db_path.write_text('{"grocery bank": [], "recipe bank": []}') # Empty grocery bank and recipe bank
         return SUCCESS
     except OSError:
         return DB_WRITE_ERROR
@@ -34,10 +34,12 @@ class DatabaseHandler:
         self._db_path = db_path
 
     def read_groceries(self) -> DBResponse:
+        print(f'DB path is {self._db_path}')
         try:
             with self._db_path.open("r") as db:
                 try:
-                    return DBResponse(json.load(db), SUCCESS)
+                    json_data = json.load(db)
+                    return DBResponse(json_data["grocery bank"], SUCCESS)
                 except json.JSONDecodeError: # Catch wrong JSON format
                     return DBResponse([], JSON_ERROR)
         except OSError: # Catch file IO problems
@@ -45,8 +47,11 @@ class DatabaseHandler:
         
     def write_groceries(self, grocery_bank: List[Dict[str, Any]]) -> DBResponse:
         try:
-            with self._db_path.open("w") as db:
-                json.dump(grocery_bank, db, indent=4)
+            with self._db_path.open("r+") as db:
+                json_data = json.load(db)
+                json_data["grocery bank"] = grocery_bank
+                db.seek(0)
+                json.dump(json_data, db, indent=4)
             return DBResponse(grocery_bank, SUCCESS)
         except OSError: # Catch file IO problems
             return DBResponse(grocery_bank, DB_WRITE_ERROR)

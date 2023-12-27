@@ -20,6 +20,7 @@ ERRORS = {
     FILE_ERROR: "config file error",
     DB_READ_ERROR: "database read error",
     DB_WRITE_ERROR: "database write error",
+    JSON_ERROR: "json error",
     ID_ERROR: "grocery id error",
     EXISTS_ERROR: "already exists error",
 }

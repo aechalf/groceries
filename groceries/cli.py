@@ -9,10 +9,12 @@ from groceries import (
 )
 
 app = typer.Typer()
+
         
 def get_grocery_controller() -> grocery.GroceryController:
     if config.CONFIG_FILE_PATH.exists():
         db_path = database.get_database_path(config.CONFIG_FILE_PATH)
+        typer.secho(f'db path is {db_path}')
     else:
         typer.secho(
             'Config file not found. Please run "groceries init"',

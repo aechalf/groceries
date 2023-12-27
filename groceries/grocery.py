@@ -36,7 +36,7 @@ class GroceryController:
         }
 
         read = self._db_handler.read_groceries()
-        if read.error == DB_READ_ERROR:
+        if read.error:
             return CurrentGrocery(grocery, read.error)
         
         if grocery in read.grocery_bank:
