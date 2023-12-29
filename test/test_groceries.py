@@ -8,6 +8,7 @@ from groceries import (
     SUCCESS,
     EXISTS_ERROR,
     ID_ERROR,
+    JSON_ERROR,
     __app_name__,
     __version__,
     cli,
@@ -23,7 +24,7 @@ def test_version():
 
 @pytest.fixture
 def mock_json_file(tmp_path):
-    grocery = [{"Name": "egg", "Category": "dairy"}]
+    grocery = {"grocery bank": [{"Name": "egg", "Category": "dairy"}], "recipe bank": []}
     db_file = tmp_path / "groceries.json"
     with db_file.open("w") as db:
         json.dump(grocery, db, indent=4)
@@ -95,10 +96,10 @@ def mock_wrong_json_format(tmp_path):
 def test_add_wrong_json_format(mock_wrong_json_format):
     gc = grocery.GroceryController(mock_wrong_json_format)
     assert gc.add(test_data1["name"], test_data1["category"]) == (test_data1["grocery"],
-     SUCCESS,
+     JSON_ERROR,
     )
     read = gc._db_handler.read_groceries()
-    assert len(read.grocery_bank) == 1
+    assert len(read.grocery_bank) == 0
 
 test_grocery1 = {
     "Name": "egg",
