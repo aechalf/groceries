@@ -222,5 +222,23 @@ def get_recipe_controller() -> recipe.RecipeController:
     
     return recipe.RecipeController(db_path)
 
-# @recipes_app.command(name="add")
-# def recipes_add()
+@recipes_app.command(name="add")
+def recipes_add(
+    name:List[str] = typer.Argument(...),
+    link: str = typer.Argument(...),
+) -> None:
+    """Add a new recipe with LINK"""
+    rc = get_recipe_controller()
+    recipe, error = rc.add(name, link)
+    if error:
+        typer.secho(
+            f'Adding recipe failed with "{ERRORS[error]}"',
+            fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    else:
+        typer.secho(
+            f"""recipe: "{recipe['Name']}" was added"""
+            f""" with link: {link}""",
+            fg=typer.colors.GREEN
+        )
