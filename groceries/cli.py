@@ -5,11 +5,18 @@ from pathlib import Path
 from typing import List, Optional
 import typer
 from groceries import (
-    ERRORS, __app_name__, __version__, config, database, grocery
+    ERRORS, __app_name__, __version__, config, database, grocery, recipe
 )
 
 app = typer.Typer()
+grocery_items_app = typer.Typer()
+app.add_typer(grocery_items_app, name="items")
+recipes_app = typer.Typer()
+app.add_typer(recipes_app, name="recipes")
 
+#
+# Global commands such as version and init
+# 
 @app.command()
 def init(
     db_path: str = typer.Option(
@@ -39,26 +46,55 @@ def init(
                     fg=typer.colors.GREEN)
         
 
-def get_grocery_controller() -> grocery.GroceryController:
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"{__app_name__} v{__version__}")
+        raise typer.Exit()
+
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Show the application's version and exit.",
+        callback=_version_callback,
+        is_eager=True,
+    )
+) -> None:
+    return
+
+def validate_config() -> Path:
     if config.CONFIG_FILE_PATH.exists():
         db_path = database.get_database_path(config.CONFIG_FILE_PATH)
+        typer.secho(f'db path is {db_path}')
     else:
         typer.secho(
             'Config file not found. Please run "groceries init"',
             fg=typer.colors.Red,
         )
-        raise typer.Exit(1)
-    if db_path.exists():
-        return grocery.GroceryController(db_path)
-    else:
+        return None
+    if not db_path.exists():
         typer.secho(
             'Database not found. Please run "groceries init"',
             fg=typer.colors.RED
         )
+        return None
+    return db_path
+
+#
+#   Grocery items app functions
+#
+def get_grocery_controller() -> grocery.GroceryController:
+    db_path = validate_config()
+    if not db_path:
         raise typer.Exit(1)
     
-@app.command()
-def remove(
+    return grocery.GroceryController(db_path)
+
+    
+@grocery_items_app.command(name="remove")
+def grocery_items_remove(
     grocery_id: int = typer.Argument(...),
     force: bool = typer.Option(
         False,
@@ -101,8 +137,8 @@ def remove(
         else:
             typer.echo("Operation canceled")
 
-@app.command(name="clear")
-def remove_all(
+@grocery_items_app.command(name="clear")
+def grocery_items_remove_all(
     force: bool = typer.Option(
         ...,
         prompt="Delete all grocery items?",
@@ -125,10 +161,10 @@ def remove_all(
     else:
         typer.echo("Operation canceled")
     
-@app.command()
-def add(
+@grocery_items_app.command(name="add")
+def grocery_items_add(
     name: List[str] = typer.Argument(...),
-    category: grocery.GroceryType = typer.Option(...,"--category", "-c", case_sensitive=False),
+    category: grocery.GroceryType = typer.Argument(...),
 ) -> None:
     """Add a new grocery with a CATEGORY."""
     gc = get_grocery_controller()
@@ -146,8 +182,8 @@ def add(
             fg=typer.colors.GREEN,
         )
 
-@app.command(name="list")
-def list_all() -> None:
+@grocery_items_app.command(name="list")
+def grocery_items_list_all() -> None:
     """List all groceries in bank."""
     gc = get_grocery_controller()
     grocery_bank = gc.get_grocery_bank()
@@ -176,20 +212,33 @@ def list_all() -> None:
         )
     typer.secho("-" * len(headers) + "\n", fg=typer.colors.BLUE)
 
-def _version_callback(value: bool) -> None:
-    if value:
-        typer.echo(f"{__app_name__} v{__version__}")
-        raise typer.Exit()
+#
+# Recipes app functions
+#
+def get_recipe_controller() -> recipe.RecipeController:
+    db_path = validate_config()
+    if not db_path:
+        raise typer.Exit(1)
+    
+    return recipe.RecipeController(db_path)
 
-@app.callback()
-def main(
-    version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-v",
-        help="Show the application's version and exit.",
-        callback=_version_callback,
-        is_eager=True,
-    )
+@recipes_app.command(name="add")
+def recipes_add(
+    name:List[str] = typer.Argument(...),
+    link: str = typer.Argument(...),
 ) -> None:
-    return
+    """Add a new recipe with LINK"""
+    rc = get_recipe_controller()
+    recipe, error = rc.add(name, link)
+    if error:
+        typer.secho(
+            f'Adding recipe failed with "{ERRORS[error]}"',
+            fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    else:
+        typer.secho(
+            f"""recipe: "{recipe['Name']}" was added"""
+            f""" with link: {link}""",
+            fg=typer.colors.GREEN
+        )
