@@ -193,24 +193,24 @@ def grocery_items_list_all() -> None:
             fg=typer.colors.RED
         )
         raise typer.Exit()
-    typer.secho("\ngrocery bank:\n", fg=typer.colors.BLUE, bold=True)
+    typer.secho("\ngrocery bank:\n", fg=typer.colors.MAGENTA, bold=True)
     columns = (
         "ID.  ",
         "| Category  ",
         "| Name  ",
     )
     headers = "".join(columns)
-    typer.secho(headers, fg=typer.colors.BLUE, bold=True)
-    typer.secho("-" * len(headers), fg=typer.colors.BLUE)
+    typer.secho(headers, fg=typer.colors.MAGENTA, bold=True)
+    typer.secho("-" * len(headers), fg=typer.colors.MAGENTA)
     for id, grocery in enumerate(grocery_bank, 1):
         name, category = grocery.values()
         typer.secho(
             f"{id}{(len(columns[0]) - len(str(id))) * ' '}"
             f"| {category}{(len(columns[1]) - len(str(category)) - 2) * ' '}"
             f"| {name}",
-            fg=typer.colors.BLUE,
+            fg=typer.colors.MAGENTA,
         )
-    typer.secho("-" * len(headers) + "\n", fg=typer.colors.BLUE)
+    typer.secho("-" * len(headers) + "\n", fg=typer.colors.MAGENTA)
 
 #
 # Recipes app functions
@@ -242,3 +242,32 @@ def recipes_add(
             f""" with link: {link}""",
             fg=typer.colors.GREEN
         )
+
+@recipes_app.command(name="list")
+def recipes_list_all() -> None:
+    """List all recipes in bank."""
+    rc = get_recipe_controller()
+    recipe_bank = rc.get_recipe_bank()
+    if len(recipe_bank) == 0:
+        typer.secho(
+            "There are no recipes in the bank yet",
+            fg=typer.colors.RED
+        )
+        raise typer.Exit()
+    typer.secho("\nrecipe bank:\n", fg=typer.colors.MAGENTA, bold=True)
+    columns = (
+        "ID.  ",
+        "| Name  ",
+    )
+    headers = "".join(columns)
+    typer.secho(headers, fg=typer.colors.MAGENTA, bold=True)
+    typer.secho("-" * len(headers) * 5, fg=typer.colors.MAGENTA)
+
+    for id, recipe in enumerate(recipe_bank, 1):
+        name, link = recipe.values()
+        typer.secho(
+            f"{id}{(len(columns[0]) - len(str(id))) * ' '}"
+            f"| {name}{(len(columns[1]) - len(str(id)) - 2) * ' '}",
+            fg=typer.colors.MAGENTA,
+        )
+    typer.secho("-" * len(headers) * 5 + "\n", fg=typer.colors.MAGENTA)

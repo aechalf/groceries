@@ -33,3 +33,8 @@ class RecipeController:
         read.item_bank.append(recipe)
         write = self._db_handler.write_recipes(read.item_bank)
         return CurrentRecipe(recipe, write.error)
+    
+    def get_recipe_bank(self) -> List[Dict[str, Any]]:
+        """Return the current recipe bank."""
+        read = self._db_handler.read_recipes()
+        return read.item_bank
