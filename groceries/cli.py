@@ -271,3 +271,72 @@ def recipes_list_all() -> None:
             fg=typer.colors.MAGENTA,
         )
     typer.secho("-" * len(headers) * 5 + "\n", fg=typer.colors.MAGENTA)
+
+@recipes_app.command(name="remove")
+def recipes_remove(
+    recipe_id: int = typer.Argument(...),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force deletion without confirmation.",
+    ),
+) -> None:
+    """Remove a recipe using its RECIPE_ID."""
+    rc = get_recipe_controller()
+
+    def _remove():
+        recipe, error = rc.remove(recipe_id)
+        if error:
+            typer.secho(
+                f'Removing recipe # {recipe_id} failed with "{ERRORS[error]}"',
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(1)
+        else:
+            typer.secho(
+                f"""recipe # {recipe_id}: '{recipe["Name"]} was removed""",
+                fg=typer.colors.GREEN,
+            )
+    
+    if force:
+        _remove()
+    else:
+        recipe_bank = rc.get_recipe_bank()
+        try:
+            recipe = recipe_bank[recipe_id - 1]
+        except IndexError:
+            typer.secho("Invalid RECIPE_ID", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        delete = typer.confirm(
+            f"Delete recipe # {recipe_id}: {recipe['Name']}?"
+        )
+        if delete:
+            _remove()
+        else:
+            typer.echo("Operation canceled")
+
+@recipes_app.command(name="clear")
+def recipes_remove_all(
+    force: bool = typer.Option(
+        ...,
+        prompt="Delete all recipes?",
+        help="Force deletion without confirmation.",
+    ),
+) -> None:
+    """Remove all recipes."""
+    rc = get_recipe_controller()
+    if force:
+        error = rc.remove_all().error
+        if error:
+            typer.secho(
+                f'Removing recipes failed with "{ERRORS[error]}"',
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(1)
+        else:
+            typer.secho("All recipes were removed.",
+                        fg=typer.colors.GREEN)
+    
+    else:
+        typer.echo("Operation canceled")

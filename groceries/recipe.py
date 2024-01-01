@@ -38,3 +38,20 @@ class RecipeController:
         """Return the current recipe bank."""
         read = self._db_handler.read_recipes()
         return read.item_bank
+    
+    def remove(self, recipe_id: int) -> CurrentRecipe:
+        """Remove a recipe from the database using its id or index."""
+        read = self._db_handler.read_recipes()
+        if read.error:
+            return CurrentRecipe({}, read.error)
+        try:
+            recipe = read.item_bank.pop(recipe_id - 1)
+        except IndexError:
+            return CurrentRecipe({}, ID_ERROR)
+        write = self._db_handler.write_recipes(read.item_bank)
+        return CurrentRecipe(recipe, write.error)
+    
+    def remove_all(self) -> CurrentRecipe:
+        """Remove all recipe itmes from the database."""
+        write = self._db_handler.write_recipes([])
+        return CurrentRecipe({}, write.error)

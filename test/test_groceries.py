@@ -167,3 +167,25 @@ def test_recipe_add(mock_json_file, name, link, expected):
     assert rc.add(name, link).error == EXISTS_ERROR
     read = rc._db_handler.read_recipes()
     assert len(read.item_bank) == 2
+
+test_recipe1 = {
+    "Name": "white chicken chili",
+    "Link": "https://www.halfbakedharvest.com/creamy-white-chicken-chili/",
+}
+test_recipe2 = {}
+
+@pytest.mark.parametrize(
+        "recipe_id, expected",
+        [
+            pytest.param(1, (test_recipe1, SUCCESS)),
+            pytest.param(3, (test_recipe2, ID_ERROR)),
+        ],
+)
+
+def test_recipe_remove(mock_json_file, recipe_id, expected):
+    rc = recipe.RecipeController(mock_json_file)
+    assert rc.remove(recipe_id) == expected
+
+def test_recipe_remove_all(mock_json_file):
+    rc = recipe.RecipeController(mock_json_file)
+    assert rc.remove_all() == ({}, SUCCESS)
